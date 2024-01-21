@@ -1,0 +1,336 @@
+{% extends "base.html" %}
+
+{% block title %}
+GameByte - Playground
+{% endblock %}
+
+{% load static %}
+
+
+{% block body %}
+<style type="text/css">
+    input,
+    textarea,
+    [contenteditable] {
+        caret-color: red;
+    }
+.vertical-scrollable{
+  
+  overflow-y: scroll;
+  color: red;
+}
+.CodeMirror { 
+    height: auto; 
+    border: 1px solid #ddd;
+    /* BACKGROUND COLOR */
+   
+    /* FIT  */
+    height: 100%;
+}
+
+
+.banner { 
+    background: #ffc; 
+    padding: 6px; 
+    border-bottom: 2px solid silver; 
+    text-align: center 
+}
+
+
+
+button:hover:before {
+opacity: 1
+}
+button:hover:active {
+background: none
+}
+button:hover:active:before {
+filter: blur(2px)
+}
+#snackbar {
+    float: right;
+    margin-left: 50px;
+  visibility: hidden; /* Hidden by default. Visible on click */
+  width: 200px; /* Set a default minimum width */
+  background-color: #333; /* Black background color */
+  color: #fff; /* White text color */
+  text-align: center; /* Centered text */
+  border-radius: 2px; /* Rounded borders */
+  padding: 16px; /* Padding */
+  position: fixed; /* Sit on top of the screen */
+  z-index: 1; /* Add a z-index if needed */
+  bottom: 30px; /* 30px from the bottom */
+}
+
+/* Show the snackbar when clicking on a button (class added with JavaScript) */
+#snackbar.show {
+  visibility: visible; /* Show the snackbar */
+  /* Add animation: Take 0.5 seconds to fade in and out the snackbar.
+  However, delay the fade out process for 2.5 seconds */
+  -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
+  animation: fadein 0.5s, fadeout 0.5s 2.5s;
+}
+
+/* Animations to fade the snackbar in and out */
+@-webkit-keyframes fadein {
+  from {bottom: 0; opacity: 0;}
+  to {bottom: 30px; opacity: 1;}
+}
+
+@keyframes fadein {
+  from {bottom: 0; opacity: 0;}
+  to {bottom: 30px; opacity: 1;}
+}
+
+@-webkit-keyframes fadeout {
+  from {bottom: 30px; opacity: 1;}
+  to {bottom: 0; opacity: 0;}
+}
+
+@keyframes fadeout {
+  from {bottom: 30px; opacity: 1;}
+  to {bottom: 0; opacity: 0;}
+}
+@media (min-width: 1200px) {
+    .container{
+        max-width: 100%;
+    }
+}
+
+
+</style>		
+
+<div class="row " >
+    {% comment %} <div class="col-1"></div> {% endcomment %}
+    <div class="col-md-6 col-sm-12 col-xs-12 "style="background-color:#131c25;color: white; ">
+        <div class="row">
+           
+            <div class="col-12" style="padding: 10px;">
+                <div style="height: 300px; background-color: #131c25; width: 100%;">
+                    {% block game %}
+                        {% include problem.problemGameFileName %}
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+        <div class="row" style="margin: 0px;">
+            <div class="col-12 vertical-scrollable " style="height: 200px; background-color: #252e38;padding: 10px">
+                <h3 style="font-family:monospace;color:#fcdf18;font-size:25px"><b style="font-weight: 900;" >{{problem.title}}</b>
+                </h3>
+                {% if problem.descriptionImage %}
+                <img src="{% static problem.descriptionImage %}" style="height: 150px;width: 50%;display:block;margin-left: auto;margin-right: auto;"><br>
+                {% endif %}
+                <span id="problem-description" style="font-family:monospace; font-size: 13px;color: darkgray;" ></span>
+                
+            </div>
+        </div>
+        <div class="row" style=" margin: 0px;margin-top: 10px; background-color: #252e38;height: 120px;">
+            <div class="col-12 vertical-scrollable" style="padding: 10px;background-color:#252e38;color: darkgrey; font-family:monospace; font-size: x-large;height: 100px;">
+                <b>Console Output:</b>
+                <p style="font-family: monospace;font-size: 13px;" id="console-output"> </p>
+            </div>
+
+        </div>
+       
+       
+    </div>
+   
+    <div class="col-md-6 col-sm-12 col-xs-12 "style="background-color:#131c25;color: white;">
+        <div class="row" >
+            <div class="col-12" style="padding: 10px;">
+                <section id="demo" style="height: 400px;">
+           
+                    <textarea  id="demotext" autofocus style="color:white;" onEvent="nextField(this);" >{{templateSolutionCode}}</textarea>
+            </section>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 10px">
+            <div class="col-6" style="  height: 150px">
+                <div class="row">
+                    <div class="col-12">
+                        <h5 style="color: darkgray">Test cases</h5>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <hr>
+                        <div class="row">
+                            <div class="col-9">
+                                <button align="center" id="testcasebtn" class="btn btn-lg btn-outline-warning" onclick="playTestCase()">
+                                    PLAY TESTCASE
+                                </button>
+                            </div>
+                            <div class="col-3">
+                                <div class="spinner-border text-warning" role="status" id="loading" style="display: none;margin-top: 4px;" >
+                                    <span class="sr-only">Loading...</span>
+                                  </div>
+                                  
+                            </div>
+                        </div>
+                        
+                        <hr>
+                    </div>
+                </div>
+            </div>
+            <div class="col-6 float-right" style=" height: 150px; ">
+                <div class="row">
+                    <div class="col-12">
+                        <h5 style="color: darkgray">Actions</h5>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-12">
+                        <hr>
+                        <div class="row">
+                            <div class="col-9">
+                                <button align="center" class="btn btn-lg btn-outline-primary" id="submitbtn" onclick="submitCode()">SUBMIT</button>
+                            </div>
+                            <div class="col-3">
+                                <div class="spinner-border text-primary" role="status" id="loading2" style="display: none;margin-top: 4px;" >
+                                    <span class="sr-only">Loading...</span>
+                                  </div>
+                            </div>
+                            
+                        </div>
+                        
+                        
+                        <hr>
+                    </div>
+                    
+                </div>
+            </div>
+        </div>    
+    </div>
+    <div id="snackbar">Code Submitted</div>
+    {% comment %} <div class="col-1">
+    </div> {% endcomment %}
+</div>
+
+{% endblock %}
+
+
+
+    {% block javascript %}
+    
+
+    <script>
+        // var editor = CodeMirror.fromTextArea(document.getElementById("demotext"), {
+        //     lineNumbers: true,
+        //     mode: "python",
+        //     theme:"leetcode",
+        //     keymap:"sublime",
+        //     matchBrackets: true,
+            
+        // });
+
+        var finalCode = "";
+        var codeMirrorGlobal;
+
+        window.onload = function () {
+            
+            // setting description of problem
+            var desc = "{{problem.description}}";
+
+            desc = desc.replaceAll('&lt;', '<');
+            desc = desc.replaceAll('&gt;', '>');
+            desc = desc.replaceAll('\n', '<br>');
+            document.getElementById("problem-description").innerHTML = desc;
+
+
+
+            var el = document.getElementById("demotext");
+            var version = "# version: Python3\n\n";
+            var codeAreaTip = "# please edit your code here:\n";
+            var codeStart = "# code start\n\n";
+            var codeEnd = "# code end\n\n";
+            var codeTip = "'''\nThis function is the entry of this program and\nit must be return your answer of current question.\n'''\n";
+            var code = "def solution():\n\tpass";
+            var initValue = version + codeAreaTip + codeStart + codeEnd + codeTip + code;
+            var myCodeMirror = CodeMirror.fromTextArea(el, {
+                mode: "python", // Language mode
+                theme: "dracula", // theme
+                //keyMap: "sublime", // Fast key style
+                lineNumbers: true, // set number
+                smartIndent: true, // smart indent
+                indentUnit: 4, // Smart indent in 4 spaces
+                indentWithTabs: true, // Smart indent with tabs
+                lineWrapping: true, // 
+                // Add line number display, folder and syntax detector to the slot
+                gutters: ["CodeMirror-linenumbers", "CodeMirror-foldgutter", "CodeMirror-lint-markers"], 
+                foldGutter: true, // Enable code folding in slots
+                autofocus: true, // Autofocus
+                matchBrackets: true, // Match end symbols, such as "],}"
+                autoCloseBrackets: true, // Auto close symbol
+                styleActiveLine: true, // Display the style of the selected row
+                autcorrect: false, // Auto correct
+                
+            });
+            finalCode = myCodeMirror.getValue();
+            codeMirrorGlobal = myCodeMirror;
+            // Set the initial text, which can also be configured in the fromTextArea
+            //myCodeMirror.setOption("value", initValue);
+            // Editor key listening
+            myCodeMirror.on("keypress", function() {
+                // Show smart tips
+                  myCodeMirror.showHint(); // Note that the code at line 131 of show-hint.js in CodeMirror library is commented (code completion is blocked and intelligent prompt is provided)
+                    
+                });
+             
+           
+                
+        };
+        
+        
+        function nextField(current)
+        {
+            for (i = 0; i < current.form.elements.length; i++)
+            {
+                if (current.form.elements[i].tabIndex - current.tabIndex == 1)
+                {
+                    current.form.elements[i].focus();
+                     if (current.form.elements[i].type == "text")
+                     {
+                         current.form.elements[i].select();
+                     }
+                }
+            }
+        }
+
+
+        function submitCode()
+        {
+            code = codeMirrorGlobal.getValue();
+            //console.log(code);
+            loading = document.getElementById('loading2');
+            loading.style.display = "block";
+            $.ajax({
+                type: "POST",
+                url: "{% url 'submitcode' %}",
+                data: {
+                    code: code,
+                    problem_id: "{{problem.id}}",
+                    csrfmiddlewaretoken: "{{ csrf_token }}",
+                },
+                success: function (data) {
+                    loading.style.display = 'none';
+                    // Get the snackbar DIV
+                    var x = document.getElementById("snackbar");
+
+                    // Add the "show" class to DIV
+                    x.className = "show";
+
+                    // After 3 seconds, remove the show class from DIV
+                    setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
+                        
+                }
+            });
+        
+
+        }
+
+
+    </script>
+    {% endblock %}
+
+
+

@@ -1,0 +1,1 @@
+web: gunicorn gamebyte.wsgi:application --log-file - --log-level debug
